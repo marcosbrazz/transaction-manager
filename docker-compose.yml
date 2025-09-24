@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  transaction-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transaction-manager
+    environment:
+      - TREASURY_API_URL=https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange
+      - ALLOW_H2_CONSOLE=true
+    ports:
+      - "8080:8080"
