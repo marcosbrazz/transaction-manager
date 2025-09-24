@@ -1,6 +1,7 @@
 package com.wex.transaction.services;
 
 import com.wex.transaction.exceptions.DuplicatePurchaseException;
+import com.wex.transaction.exceptions.InternalApplicationError;
 import com.wex.transaction.exceptions.ServiceException;
 import com.wex.transaction.models.Purchase;
 import com.wex.transaction.repository.PurchaseRepository;
@@ -12,17 +13,21 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class PurchaseServiceTest {
 
     private PurchaseRepository repository;
     private PurchaseService service;
+    private ExchangeService exchangeService;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PurchaseRepository.class);
-        service = new PurchaseService(repository);
+        this.repository = mock(PurchaseRepository.class);
+        this.exchangeService = mock(ExchangeService.class);
+        this.service = new PurchaseService(this.repository, this.exchangeService);
     }
 
     @Test
@@ -55,7 +60,7 @@ class PurchaseServiceTest {
     }
 
     @Test
-    void shouldThrowPurchaseServiceExceptionWhenAlgorithmNotAvailable() {
+    void shouldThrowInternalApplicationErrorWhenAlgorithmNotAvailable() {
         Purchase purchase = new Purchase();
         purchase.setDescription("Fail purchase");
         purchase.setTransactionDate(LocalDate.of(2025, 9, 18));
@@ -65,8 +70,8 @@ class PurchaseServiceTest {
             mocked.when(() -> java.security.MessageDigest.getInstance("SHA-256"))
                     .thenThrow(new java.security.NoSuchAlgorithmException("SHA-256 not available"));
 
-            ServiceException ex =
-                    assertThrows(ServiceException.class, () -> service.save(purchase));
+            InternalApplicationError ex =
+                    assertThrows(InternalApplicationError.class, () -> service.save(purchase));
 
             assertTrue(ex.getMessage().contains("Failed to generate id"));
         }

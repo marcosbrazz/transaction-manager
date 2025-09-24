@@ -1,7 +1,5 @@
 package com.wex.transaction.controllers;
 
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -33,25 +31,17 @@ public class PurchaseController {
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Purchase purchase) {
         log.info("Received request: {}", purchase.getDescription());
-        String id = purchaseService.save(purchase);
+        String id = this.purchaseService.save(purchase);
         log.debug("Generated ID {} for purchase {}", id, purchase.getDescription());
         return ResponseEntity.ok(new Id(id));
     }
 
-    @GetMapping
-    public ResponseEntity<Optional<Purchase>> getByIdAndCurrency(
-            @PathVariable("id") String id,
-            @RequestParam(value = "currency", required = false, defaultValue = "USD") String currency) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Purchase> getByIdAndCurrency(
+            @PathVariable(value = "id", required = true) String id,
+            @RequestParam(value = "currency", required = true) String currency) {
         
-        Optional<Purchase> purchase = purchaseService.getPurchaseByIdAndCurrency(id, currency);
-
-        if (purchase.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // TODO integrate currency conversion service
-        return ResponseEntity.ok(
-            purchase
-        );
+        Purchase purchase = this.purchaseService.getPurchaseByIdAndCurrency(id, currency);
+        return ResponseEntity.ok(purchase);
     }
 }

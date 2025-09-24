@@ -2,6 +2,8 @@ package com.wex.transaction.exceptions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
@@ -16,13 +18,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
-class PurchaseValidationHandlerTest {
+class ErrorHandlerTest {
 
-    private PurchaseValidationHandler handler;
+    private ErrorHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new PurchaseValidationHandler();
+        handler = new ErrorHandler();
     }
 
     @Test
@@ -33,9 +35,9 @@ class PurchaseValidationHandlerTest {
                 new BeanPropertyBindingResult(new Object(), "purchase");
         bindingResult.addError(new FieldError("purchase", "description", "must not exceed 50 characters"));
         bindingResult.addError(new FieldError("purchase", "amount", "must be greater than 0"));
-
-        MethodArgumentNotValidException ex =
-                new MethodArgumentNotValidException(null, bindingResult);
+        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+        when(ex.getBindingResult()).thenReturn(bindingResult);
+        
 
         // Act
         ResponseEntity<Map<String, Object>> response = handler.handleValidationErrors(ex);
@@ -89,10 +91,10 @@ class PurchaseValidationHandlerTest {
         ServiceException ex = new ServiceException("Generic error", null);
 
         // Act
-        ResponseEntity<Map<String, Object>> response = handler.handleServiceErrors(ex);
+        ResponseEntity<Map<String, Object>> response = handler.handleApplicationErrors(ex);
 
         // Assert
-        assertEquals(500, response.getStatusCode().value());
+        assertEquals(400, response.getStatusCode().value());
         @SuppressWarnings("null")
         List<?> errors = (List<?>) response.getBody().get("errors");
         assertEquals(1, errors.size());
@@ -104,7 +106,7 @@ class PurchaseValidationHandlerTest {
         ApplicationException ex = new DuplicatePurchaseException("1234");
 
         // Act
-        ResponseEntity<Map<String, Object>> response = handler.handlePurchaseErrors(ex);
+        ResponseEntity<Map<String, Object>> response = handler.handleApplicationErrors(ex);
 
         // Assert
         assertEquals(400, response.getStatusCode().value());

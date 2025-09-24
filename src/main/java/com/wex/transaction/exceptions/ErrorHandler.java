@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 @ControllerAdvice
-public class PurchaseValidationHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(PurchaseValidationHandler.class);
-
+public class ErrorHandler {
+    
+    private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
     private static final Map<String, String> formatErrorsMessage = Map.of(
         "transactionDate", "Invalid date format. Expected yyyy-MM-dd",
         "amount", "Invalid decimal format."
@@ -68,19 +67,25 @@ public class PurchaseValidationHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ServiceException.class)
-    public ResponseEntity<Map<String, Object>> handleServiceErrors(ServiceException ex) {
-        log.debug("Purchase service error handled: {}", ex.getMessage());
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("errors", List.of(ex.getAttributes()));
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    @ExceptionHandler(PurchaseNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePurchaseNotFound(PurchaseNotFoundException ex) {
+        return this.handleError(HttpStatus.NOT_FOUND, ex);
+    }
+    
+    @ExceptionHandler(InternalApplicationError.class)
+    public ResponseEntity<Map<String, Object>> handleInternalErrors(InternalApplicationError ex) {
+        return this.handleError(HttpStatus.INTERNAL_SERVER_ERROR, ex);
     }
 
     @ExceptionHandler(ApplicationException.class)
-    public ResponseEntity<Map<String, Object>> handlePurchaseErrors(ApplicationException ex) {
-        log.debug("Purchase error handled: {}", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleApplicationErrors(ApplicationException ex) {
+        return this.handleError(HttpStatus.BAD_REQUEST, ex);
+    }
+
+    private ResponseEntity<Map<String, Object>> handleError(HttpStatus status, ApplicationException ex) {
+        log.debug("Error handled: {}", ex.getMessage());
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("errors", List.of(ex.getAttributes()));
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, status);
     }
 }

@@ -1,8 +1,12 @@
 package com.wex.transaction.controllers;
 
-import com.wex.transaction.models.Purchase;
-import com.wex.transaction.services.PurchaseService;
-import com.wex.transaction.exceptions.ServiceException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +16,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.wex.transaction.exceptions.InternalApplicationError;
+import com.wex.transaction.models.Purchase;
+import com.wex.transaction.services.PurchaseService;
 
 @WebMvcTest(PurchaseController.class)
 @Import(PurchaseControllerTest.TestConfig.class)
@@ -55,7 +58,7 @@ class PurchaseControllerTest {
     @Test
     void shouldReturnInternalServerErrorWhenServiceFails() throws Exception {
         when(purchaseService.save(any(Purchase.class)))
-                .thenThrow(new ServiceException("Some error", null));
+                .thenThrow(new InternalApplicationError("Some error", null));
 
         mockMvc.perform(post("/purchase")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +34,15 @@ public class Purchase {
     @Digits(integer = 10, fraction = 2, message = "Purchase amount must have at most 2 decimal places")
     private BigDecimal amount;
 
+    @Transient
+    private String currency;
+    
+    @Transient
+    private BigDecimal rate;
+
+    @Transient
+    private BigDecimal convertedAmount;
+
     public String getDescription() {
         return description;
     }
@@ -53,9 +63,37 @@ public class Purchase {
         return amount;
     }
 
-    public void setAmount(BigDecimal purchaseAmount) {
-        if (purchaseAmount != null) {
-            this.amount = purchaseAmount.setScale(2, RoundingMode.HALF_UP);
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
+    }
+
+    public void setRate(BigDecimal rate) {
+        this.rate = rate;
+    }
+
+    public BigDecimal getConvertedAmount() {
+        return convertedAmount;
+    }
+
+    public void setConvertedAmount(BigDecimal convertedAmount) {
+        if (convertedAmount != null) {
+            this.convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            this.convertedAmount = null;
+        }
+    }
+
+    public void setAmount(BigDecimal amount) {
+        if (amount != null) {
+            this.amount = amount.setScale(2, RoundingMode.HALF_UP);
         } else {
             this.amount = null;
         }
